@@ -1,8 +1,168 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#11140f"><title>ShatterOS · Shared space, real play</title><link rel="stylesheet" href="style.css"></head><body>
-<header><a class="brand" href="/">◈ SHATTER<span>OS</span></a><span class="tag">EXPERIMENT 001 / CONNECTED CANVAS</span><span id="status">OFFLINE</span></header>
-<main><section class="intro"><p class="eyebrow">YOUR SCREENS. ONE WORLD.</p><h1>Break the<br><em>boundaries.</em></h1><p class="lede">Turn the devices on your desk into windows into the same physical playground.</p></section>
-<section id="joinPanel" class="panel"><div class="step">01 / OPEN A PORTAL</div><h2>Meet in the same room.</h2><p>Use the same address and room code on every device.</p><form id="joinForm"><label>Room code<input id="room" required minlength="3" maxlength="24" pattern="[A-Za-z0-9-]+"></label><label>Screen name<input id="name" value="Main stage" maxlength="24" required></label><button>Enter the playground ↗</button></form><p id="error" role="alert"></p></section>
-<section id="play" hidden><div class="toolbar"><div><span class="step">LIVE / </span><strong id="roomLabel"></strong> <span id="count"></span></div><div class="actions"><button id="launch">Launch ball ↗</button><button id="reset" class="secondary">Reset grid</button><button id="tilt" class="secondary">Enable tilt</button><button id="fullscreen" class="secondary">Immersive ⛶</button></div></div>
-<div class="stage"><canvas id="world" aria-label="Shared physics world. Drag and release to throw a ball."></canvas><div class="stage-label">DRAG TO THROW · BEZELS ARE PART OF THE JOURNEY</div></div>
-<div class="settings"><section class="panel"><div class="step">02 / MAP YOUR DESK</div><h2>Every screen has a place.</h2><p>Drag a viewport in the map to match your desk. Gaps stay real.</p><canvas id="map" width="800" height="450" aria-label="Device map"></canvas><div id="devices"></div></section><section class="panel"><div class="step">03 / SET THE SCALE</div><h2>A little calibration. A lot of magic.</h2><p>Measure the visible canvas width with a ruler. Enter millimeters so objects keep their physical size across devices.</p><label>Visible canvas width (mm)<input id="mm" type="number" min="30" max="1200" step="1" value="240"></label><label>Viewport X (mm)<input id="offsetX" type="number" min="0" max="1500" value="0"></label><label>Viewport Y (mm)<input id="offsetY" type="number" min="0" max="1500" value="100"></label><button id="calibrate" class="secondary">Apply calibration</button><p class="note">Tilt needs HTTPS and browser support. A watch can join this room and use Reset grid as a simple remote.</p></section></div></section>
-</main><footer>SHATTEROS / A MULTI-DEVICE PHYSICS LAB <span>1600 × 900 MM SHARED WORLD</span></footer><script src="/socket.io/socket.io.js"></script><script src="app.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#07060e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="ShatterOS turns every screen on your desk into one continuous world.">
+  <title>ShatterOS</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="css/os.css">
+</head>
+<body class="booting">
+  <canvas id="world" aria-label="The shared world. Drag objects to fling them, pull back on empty space to launch an orb."></canvas>
+
+  <!-- Boot / join -->
+  <section id="boot" aria-labelledby="bootTitle">
+    <div class="boot-card">
+      <svg class="logo" viewBox="0 0 120 120" aria-hidden="true">
+        <defs>
+          <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e6ffc2"/><stop offset=".5" stop-color="#c5fa75"/><stop offset="1" stop-color="#8f7bff"/></linearGradient>
+        </defs>
+        <g fill="url(#lg)">
+          <path class="shard s1" d="M60 6 L86 34 L60 46 Z"/>
+          <path class="shard s2" d="M60 6 L60 46 L34 34 Z"/>
+          <path class="shard s3" d="M34 34 L60 46 L26 70 Z"/>
+          <path class="shard s4" d="M86 34 L94 70 L60 46 Z"/>
+          <path class="shard s5" d="M26 70 L60 46 L60 114 Z"/>
+          <path class="shard s6" d="M60 46 L94 70 L60 114 Z"/>
+        </g>
+      </svg>
+      <h1 id="bootTitle">Shatter<span>OS</span></h1>
+      <p class="tagline">Every screen on your desk. <em>One world.</em></p>
+
+      <div id="invite" hidden>
+        <p class="invite-line">You're invited to world <strong id="inviteRoom"></strong></p>
+      </div>
+
+      <div class="kind-row" role="radiogroup" aria-label="This device is a">
+        <button type="button" class="kind" data-kind="desktop" role="radio">💻<span>Laptop</span></button>
+        <button type="button" class="kind" data-kind="tablet" role="radio">📟<span>Tablet</span></button>
+        <button type="button" class="kind" data-kind="phone" role="radio">📱<span>Phone</span></button>
+        <button type="button" class="kind" data-kind="watch" role="radio">⌚<span>Watch</span></button>
+      </div>
+      <label class="name-field">Screen name<input id="name" maxlength="24" autocomplete="off" spellcheck="false"></label>
+
+      <button id="enter" class="primary big">Create a world</button>
+      <div id="joinCode" class="code-row">
+        <input id="room" placeholder="Room code" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Room code">
+        <button id="joinBtn" class="ghost">Join</button>
+      </div>
+      <p id="bootError" role="alert"></p>
+      <p class="fine">Open on two or more devices — they snap together into one continuous space.</p>
+    </div>
+  </section>
+
+  <!-- Menubar -->
+  <header id="menubar">
+    <button id="logoBtn" class="mb-logo" aria-haspopup="menu" aria-expanded="false">◈ <b>ShatterOS</b></button>
+    <div class="mb-center">
+      <span id="questPill" class="pill quest" hidden></span>
+    </div>
+    <div class="mb-right">
+      <button id="gravityPill" class="pill" title="Gravity (G)"></button>
+      <button id="screensPill" class="pill screens" title="Screens in this world"><span id="dots"></span><span id="screenCount">1</span></button>
+      <button id="roomPill" class="pill room" title="Add a screen (A)">⌁ <span id="roomCode"></span></button>
+      <span id="net" class="net" title="Connection"></span>
+      <time id="clock"></time>
+    </div>
+  </header>
+  <nav id="menu" role="menu" hidden>
+    <button role="menuitem" data-cmd="about">About ShatterOS</button>
+    <hr>
+    <button role="menuitem" data-cmd="calibrate">Calibrate physical size…</button>
+    <button role="menuitem" data-cmd="rename">Rename this screen…</button>
+    <button role="menuitem" data-cmd="tilt">Tilt &amp; shake</button>
+    <hr>
+    <button role="menuitem" data-cmd="cinema">Cinema mode <kbd>H</kbd></button>
+    <button role="menuitem" data-cmd="fullscreen">Full screen <kbd>F</kbd></button>
+    <hr>
+    <button role="menuitem" data-cmd="reset">Reset world</button>
+    <button role="menuitem" data-cmd="leave">Leave world</button>
+  </nav>
+
+  <!-- Dock -->
+  <nav id="dock" aria-label="Dock"></nav>
+  <button id="dockHandle" aria-label="Show dock"></button>
+  <button id="cinemaExit" aria-label="Exit cinema mode">◈</button>
+
+  <!-- Overlays shared across screens -->
+  <div id="identify" aria-hidden="true"><div class="id-name"></div><div class="id-kind"></div></div>
+  <div id="linkHint" hidden>
+    <div class="link-card">
+      <div class="swipe-demo"><span class="dev a"></span><span class="finger"></span><span class="dev b"></span></div>
+      <h2>Swipe from one screen onto the next</h2>
+      <p>Drag a finger off the edge of one screen and straight onto the neighbouring one. ShatterOS measures where and how fast you crossed the gap, then lines the worlds up. The grid should continue across the bezel.</p>
+      <button id="linkDone" class="primary">Done</button>
+    </div>
+  </div>
+  <div id="countdown" aria-live="assertive"></div>
+  <div id="toasts" aria-live="polite"></div>
+
+  <!-- Watch remote -->
+  <section id="remote" hidden>
+    <button id="remoteBtn" aria-label="Run action"><span class="r-glyph"></span><span class="r-label"></span></button>
+    <div class="r-dots"></div>
+    <button id="remoteView" class="ghost small">view</button>
+  </section>
+
+  <!-- Sheets -->
+  <div id="scrim" hidden></div>
+  <section class="sheet" id="sheet-add" hidden role="dialog" aria-labelledby="addTitle">
+    <button class="close" aria-label="Close">✕</button>
+    <h2 id="addTitle">Add a screen</h2>
+    <div class="add-grid">
+      <div class="qr-wrap"><img id="qr" alt="QR code to join this world"></div>
+      <ol class="steps">
+        <li><b>Scan</b> with a phone, tablet or second laptop.</li>
+        <li>It appears <b>beside this screen</b> instantly — things can already roll across.</li>
+        <li>Use <b>Link</b> and swipe across both screens to align them to the millimetre.</li>
+      </ol>
+    </div>
+    <div class="url-row"><code id="joinUrl"></code><button id="copyUrl" class="ghost small">Copy</button></div>
+    <p id="addNote" class="note"></p>
+  </section>
+
+  <section class="sheet wide" id="sheet-map" hidden role="dialog" aria-labelledby="mapTitle">
+    <button class="close" aria-label="Close">✕</button>
+    <h2 id="mapTitle">Desk map</h2>
+    <p class="sub">Drag screens to match your real desk. Edges snap together; glowing seams are open portals. Every screen is showing its name right now.</p>
+    <canvas id="map"></canvas>
+    <div class="sheet-actions">
+      <button id="arrange" class="ghost">Auto‑arrange in a row</button>
+      <button id="mapLink" class="ghost">Link by swiping</button>
+      <button id="mapDone" class="primary">Done</button>
+    </div>
+  </section>
+
+  <section class="sheet" id="sheet-calibrate" hidden role="dialog" aria-labelledby="calTitle">
+    <button class="close" aria-label="Close">✕</button>
+    <h2 id="calTitle">True size</h2>
+    <p class="sub">Hold any bank card against the screen and resize the outline until it matches exactly. Objects then keep their real size and speed on every device.</p>
+    <div class="card-stage"><div id="cardOutline"><span>85.6 × 54 mm</span></div></div>
+    <div class="cal-row">
+      <button id="calMinus" class="ghost round" aria-label="Smaller">−</button>
+      <input id="calRange" type="range" min="2" max="12" step="0.01" aria-label="Pixels per millimetre">
+      <button id="calPlus" class="ghost round" aria-label="Larger">+</button>
+    </div>
+    <p class="note" id="calInfo"></p>
+    <div class="sheet-actions"><button id="calDone" class="primary">Save size</button></div>
+  </section>
+
+  <section class="sheet" id="sheet-about" hidden role="dialog" aria-labelledby="aboutTitle">
+    <button class="close" aria-label="Close">✕</button>
+    <h2 id="aboutTitle">ShatterOS</h2>
+    <p class="sub">A multi-device operating space. Each screen is a window into one shared, physical world measured in real millimetres. Objects leave one screen, cross the real gap between bezels, and arrive on the next.</p>
+    <div class="shortcuts" id="shortcuts"></div>
+    <p class="note">Gestures: tap an icon to open it · drag anything to fling it · pull back on empty space to slingshot an orb · double‑tap for a shockwave · tilt or shake a phone.</p>
+  </section>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

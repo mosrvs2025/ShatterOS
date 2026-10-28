@@ -1,99 +1,104 @@
-# ShatterOS
+# ◈ ShatterOS
 
-**Your screens. One world.** A working multi-device physics playground inspired by choreographed viewport illusions. Open one room on several devices and use each screen as a window into one continuous world.
+**Every screen on your desk. One world.**
+
+ShatterOS turns your laptop, phone, tablet and watch into windows onto one continuous, physical world. Each screen sees its own slice of it, measured in real millimetres. Throw an app icon off the laptop and it flies across the bezel gap onto your phone. Tip the phone like a ramp and its contents pour out onto the laptop. A small traveller walks from screen to screen looking for a key that waits on your watch.
+
+Nothing is pre-rendered. One authoritative physics simulation runs on the server, and every device renders the same world shifted to its own place on the desk.
 
 ## Run it
 
-Requires Node.js 22 or newer.
+Requires Node.js 22+.
 
 ```sh
 npm ci
-npm start
+npm start              # http://localhost:3000
+npm run start:https    # https://localhost:3443, needed for tilt & shake on phones
 ```
 
-Open http://localhost:3000. To connect a phone on the same Wi-Fi, use `http://YOUR_COMPUTER_LAN_IP:3000` on both devices, then enter the same room code. Allow the port through your local firewall if necessary. Alternatively run the Docker image using `docker build -t shatteros .` and `docker run -p 3000:3000 shatteros`.
+1. On the laptop, open the URL and press **Create a world**.
+2. A QR code appears. Scan it with your phone (same Wi‑Fi). The phone docks to the right of the laptop on its own, and things can already roll across.
+3. Press **Link** 🔗 and swipe one finger off the edge of one screen and straight onto the next. The two screens line up to the millimetre, and the wallpaper's sun and grid continue across the bezel.
+4. Press **Showtime** 🎬.
 
-1. Join the same room on all screens. The room code is also in the URL for sharing.
-2. Measure the visible canvas width on each device with a ruler and enter it in millimeters. Apply calibration.
-3. Arrange the rectangles in the desk map to match your physical screens. Leave real bezel gaps between them.
-4. Launch a ball, or drag and release on the canvas to throw one. It crosses the global space and knocks sleeping cards out of their grid.
-5. Use Immersive mode for edge-to-edge viewing; calibrate again after changing browser UI or orientation.
-6. Enable tilt on a compatible phone over HTTPS. A small screen or watch browser can join and act as a Reset grid remote.
+With `start:https` the server creates a self-signed certificate for your LAN addresses in `.cert/`. Each phone has to accept the warning once. A tunnel such as `cloudflared` or `ngrok` works too. Docker: `docker build -t shatteros . && docker run -p 3000:3000 shatteros`.
 
-For a quick single-computer demo, open two browser windows in the same room and place their map rectangles next to one another. This demonstrates the handoff without requiring sensor access.
+No second device? Open two browser windows side by side, put both in the same world, and arrange them in **Desk Map**.
 
-## Implemented
+## What makes it feel like magic
 
-- Authoritative Matter.js simulation at 60 fixed steps/second, snapshots at 30/second.
-- Socket.IO rooms, automatic reconnect/rejoin, cleanup of empty worlds.
-- Global 1600 × 900 millimeter space; canvas viewports with independent position and physical scale.
-- Manual layout editor, numeric calibration, visible bezel travel, live viewport movement.
-- Projectile launches, card collisions, reset, local tilt force and fullscreen view.
-- Input validation, room/device/body limits, basic event throttling, integration tests and GitHub Actions.
-
-The server remains the authority; clients interpolate the previous two snapshots. Interpolation adds roughly one snapshot of latency and does not eliminate network jitter. There is no camera tracking or automatic physical position detection.
-
-## The math
-
-`worldX = viewport.x + localCssX / cssPixelsPerMillimeter`
-
-`screenCssX = (worldX - viewport.x) * cssPixelsPerMillimeter`
-
-`cssPixelsPerMillimeter = visibleCanvasCssWidth / measuredCanvasWidthMm`
-
-Height follows the canvas aspect ratio. Device pixel ratio is used only for sharp rendering, not physical-size inference. Browser-reported pixels do **not** reliably reveal physical DPI.
-
-## Project map
-
-| File | Responsibility |
+| | |
 | --- | --- |
-| `server.cjs` | HTTP, room lifecycle, validated socket events, physics and snapshots |
-| `public/app.js` | Calibration, interpolation, rendering, throwing, tilt and desk map |
-| `public/index.html` / `style.css` | Responsive playground interface |
-| `test/integration.test.cjs` | Real server and multi-client integration checks |
+| **World‑space wallpaper** | The synthwave sun, mountains, aurora and stars are painted in world millimetres, not per screen. Once the screens are aligned the art continues across the bezels, so anyone can see that the screens share one space. |
+| **Bezels are real space** | The gap between screens is part of the world. Objects keep travelling through it at the same speed and come out the other side. |
+| **Portals, walls and bridges** | Each screen's bottom edge is a floor and its sides are walls, except where an edge faces another screen. Those edges become glowing portals labelled with the neighbour's name and gap. Narrow gaps get an invisible bridge so things roll across. A wide gap is a real hole that things fall into. |
+| **Swipe to link** (Pinch‑style) | Swipe off one screen onto another. The server matches the exit and the entry, lines up the touch points, and estimates the bezel gap as *finger speed × time in the gap*. |
+| **True size** | Hold a bank card against the screen and match the outline (ISO ID‑1, 85.6 × 54 mm). After that, a 16 mm icon is 16 mm on every device. |
+| **Elevator screens** | Dragging a screen in the Desk Map carries whatever is inside it, like sliding a phone with the character still in it. Stack a screen under another and the floor above it opens. |
+| **Tilt & shake** | The phone's real gravity is projected onto its screen. Tip it sideways on the desk and its contents slide off the edge onto the next screen. Shake it and everything on it jumps. |
+| **Apps are objects** | The desktop icons are physics bodies. Tap one to run it. Drag it to fling it across screens. The **Magnet** pulls every scattered icon home through everything else. |
+| **Synchronised time** | Clients estimate the server clock (NTP‑style). The Showtime countdown hits zero on every screen at the same moment, and confetti, shockwave rings and twinkling stars are computed from shared timestamps and seeds, so a burst that starts on the laptop carries on across the phone. |
+| **Sound from the right screen** | Impacts play only on the device where they happen, panned to where they hit. Phones buzz under heavy hits. |
+| **Form‑factor roles** | **Laptop:** the stage, with a desktop of apps, a dock and keyboard shortcuts. **Phone/tablet:** a window with tilt and shake. **Watch:** a one‑button remote (swipe or turn the crown to choose Magnet, Shockwave, Confetti…). The smallest screen also holds the quest key, like the iPod nano. |
+| **Cross‑Screen Quest** | 🗝️ The wanderer walks continuously and turns back at walls. Bridge the gaps, move screens as elevators, pick up the key on the smallest screen and reach the door on the far one. |
 
-## Verify
+### Gestures & keys
+
+| Do | Gesture | Key |
+| --- | --- | --- |
+| Open an app | tap its icon | |
+| Grab & fling anything | press, drag, release | |
+| Slingshot an orb | pull back on empty space (shows its trajectory) | `O` launches one |
+| Shockwave | double‑tap empty space | `Space` at the cursor |
+| Boulder · Wanderer · Magnet · Gravity · Confetti · Showtime · Quest | dock / icons | `B` `W` `M` `G` `C` `S` `Q` |
+| Link · Desk map · Add screen | dock / icons | `L` `P` `A` |
+| Cinema mode · Full screen | ◈ menu | `H` · `F` |
+
+## How it works
+
+```
+ phone  ─┐                                   ┌─ every client renders
+ laptop ─┼─ Socket.IO ─▶  room: World        │  screenPx = (worldMm − originMm) × pxPerMm
+ watch  ─┘   inputs       • Matter.js @60 Hz │  interpolating snapshots ~95 ms in the past
+                          • devices = viewports in mm
+                          • floors/walls/bridges rebuilt from the layout
+                          ── snapshots @30 Hz + fx events ─▶
+```
+
+- **`lib/geometry.cjs`** holds the pure desk math: neighbours, portals, floor and wall solids with holes cut where screens face each other, bridges, auto‑placement, snapping, and swipe‑link positioning.
+- **`lib/world.cjs`** is the simulation for one room: per‑screen gravity (tilt), parked icons that sleep until hit, magnet recall, grab constraints, shockwaves, elevator carry, the wanderer, key and door, and the Showtime timeline.
+- **`server.cjs`** handles rooms, validation, per‑socket rate limits, reconnection (a device gets its old position back), the QR code at `/qr.svg`, LAN discovery at `/api/info`, and optional HTTPS.
+- **`public/js/`** contains the browser modules: `net` (clock sync, snapshot interpolation), `render` (sprites, the silhouette, portals, trails, off‑screen hints), `art` (world wallpaper), `fx` (deterministic shared effects), `input` (gestures, swipe‑link), `sensors` (tilt & shake), `audio` (synth), `ui` (the OS shell).
+
+Key formulas:
+
+- `pxPerMm` comes from card calibration, or a per‑form‑factor guess until you calibrate. Browsers do not report real pixel density.
+- Gravity on a screen from `DeviceOrientation` is `g = (sin γ · cos β, sin β)`, rotated by `screen.orientation.angle`. A phone lying flat keeps a gentle default "down", so it still behaves like the side‑view world, and tilt then acts as a ramp.
+- Swipe link: `B.x = A.right + gap`, `B.y = A.y + exitAlong − enterAlong`, with `gap ≈ fingerSpeed × (tEnter − tExit)`, clamped to 2–70 mm.
+
+## Test
 
 ```sh
 npm test
 ```
 
-Tests cover shared bodies, room isolation, manual viewport placement, a projectile crossing a viewport gap, reset, disconnect cleanup and invalid room rejection. Browser UI and real-device sensor behavior still need physical-device validation.
+20 tests run in about a second. They cover the geometry (portals, holes, bridges, snapping, link math), the simulation (crossing a bezel, elevator carry, shockwave and magnet, grab and fling, tilt pouring, a complete quest, the Showtime timeline) and the server end to end over real sockets (placement, room isolation, swipe linking, reconnect identity, input validation, QR).
 
-## Hosting
+## Hosting & limits
 
-Deploy as **one persistent Node process** or Docker container with WebSocket support, behind HTTPS. Set `PORT` as needed. This version uses in-memory rooms: restarting the server clears them. Do not deploy the server as a short-lived request function. Multiple replicas require room affinity and a dedicated authoritative simulation design; a Socket.IO adapter alone is insufficient.
-
-Room codes are bearer access: anyone knowing a code can move viewports, launch objects and reset that room. There are no accounts, private-room authorization or durable projects. Treat this as a trusted-group prototype until those controls are implemented.
-
-## Scope and limitations
-
-This is the ShatterOS sandbox foundation. The Modular Desk creative studio and Cross-Screen Bridge game are future modes, not finished features. OS icons are simulated app content; browser security prevents manipulating the real home screen. Tilt needs HTTPS, user permission where required, and compatible hardware. Watch browsers vary; native crown controls and haptics are not implemented. Physical movement is represented by dragging the map; moving a phone on the desk is not automatically tracked. Floors and walls belong to the global world, not each screen edge.
-
-Simultaneous edge touches are not an exact spatial calibration method by themselves: touch timing cannot uniquely determine screen offsets, gaps or rotation. A future gesture flow needs known edges, matched contact points, clock offset estimation and a manual correction step.
+- Run it as **one long‑lived Node process** with WebSockets, behind HTTPS. Rooms live in memory, are kept for 60 s after the last screen leaves, and are lost on restart. Several replicas would need room affinity.
+- A room code works like a password: anyone with it can join and act in that world. There are no accounts. Treat it as something to use with people you trust.
+- Swipe linking needs touch, or a mouse drag that ends at the edge. iOS Safari's edge‑swipe‑back gesture can get in the way on the left edge, so use **Add to Home Screen** for a full‑screen app.
+- Tilt needs HTTPS and, on iOS, a permission tap. Watch browsers vary, so the remote also works with taps and swipes.
+- Screens are assumed upright and unrotated relative to each other.
 
 ## Roadmap
 
-- [ ] Host/participant permissions, reconnect identity, persistent layouts and a shared join QR code.
-- [ ] Pairwise edge calibration with explicit gap measurement and offset correction.
-- [ ] Clock offset/RTT telemetry and adaptive snapshot interpolation.
-- [ ] Rotated viewports and screen-orientation-aware gravity.
-- [ ] Kinematic carrier surfaces for the elevator-screen interaction.
-- [ ] Modular Desk mode: transferable cards, palette and inspector roles.
-- [ ] Bridge game: character, moving platforms, keys and goals.
-- [ ] Dedicated wearable controller, accessible map positioning and device test matrix.
-
-## Continue developing
-
-```sh
-git clone https://github.com/mosrvs2025/ShatterOS.git
-cd ShatterOS
-npm ci
-npm start
-```
-
-See the roadmap above for the next implementation milestones.
+- Rotated screens and orientation‑aware portals
+- Modular Desk studio: a card palette on the phone, an inspector on the tablet, a metronome on the watch
+- More quest levels with moving platforms and switches across devices
+- Optional camera‑assisted auto‑layout (each screen flashes a marker)
 
 ## License
 
-MIT; see LICENSE.
+MIT, see [LICENSE](LICENSE).

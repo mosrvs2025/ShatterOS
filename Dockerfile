@@ -3,6 +3,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 COPY server.cjs ./
+COPY lib ./lib
 COPY public ./public
 EXPOSE 3000
 CMD ["npm", "start"]

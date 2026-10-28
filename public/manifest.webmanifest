@@ -1,0 +1,11 @@
+{
+  "name": "ShatterOS",
+  "short_name": "ShatterOS",
+  "description": "Every screen on your desk. One world.",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#07060e",
+  "theme_color": "#07060e",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
