@@ -7,7 +7,7 @@ import path from 'node:path';
 // Ephemeral trusted-LAN relay. Nodes execute tasks; the relay only queues envelopes.
 export function createMeshServer() {
  const rooms=new Map();
- const server=http.createServer(async(req,res)=>{
+ const handler=async(req,res)=>{
   res.setHeader('Cache-Control','no-store');
   const url=new URL(req.url,'http://localhost');
   if(req.method==='GET' && (url.pathname==='/' || url.pathname==='/app.js' || url.pathname==='/style.css')) {
@@ -24,7 +24,7 @@ export function createMeshServer() {
    if(!room){if(rooms.size>=100)return out(429,{error:'Server full'});room={nodes:new Map(),events:[],seq:0};rooms.set(m.room,room);}
    if(room.nodes.size>=16)return out(429,{error:'Room full'});
    const id=randomBytes(8).toString('hex'), token=randomBytes(24).toString('hex');
-   room.nodes.set(id,{id,token,name:String(m.name||'Node').slice(0,24),role:['sense','memory','synthesis'].includes(m.role)?m.role:'sense',last:Date.now()});
+   room.nodes.set(id,{id,token,name:String(m.name||'Node').slice(0,24),role:['sense','memory','synthesis','needle'].includes(m.role)?m.role:'sense',last:Date.now()});
    return out(200,{id,token});
   }
   const n=room?.nodes.get(m.id);if(!n||n.token!==m.token)return out(403,{error:'Unknown node'});
@@ -40,8 +40,9 @@ export function createMeshServer() {
   }
   if(m.type==='leave'){room.nodes.delete(n.id);if(!room.nodes.size)rooms.delete(m.room);return out(200,{ok:true});}
   return out(400,{error:'Unknown operation'});
- });
- return {server,rooms};
+ };
+ const server=http.createServer(handler);
+ return {server,rooms,handler};
 }
 if(process.argv[1] && path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const {server}=createMeshServer();server.listen(Number(process.env.PORT)||8787,'0.0.0.0',()=>console.log('Octopus Mesh listening on port '+(process.env.PORT||8787)));
