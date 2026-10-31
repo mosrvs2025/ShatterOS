@@ -7,6 +7,8 @@ const clamp = (n,a,b) => Math.max(a,Math.min(b,n));
 const number = (n,a,b,f=0) => typeof n === 'number' && Number.isFinite(n) ? clamp(n,a,b) : f;
 function createApp() {
  const app=express(), http=createServer(app), io=new Server(http,{maxHttpBufferSize:16384});
+ const mesh = import('./octopus-mesh/server.mjs').then(({createMeshServer}) => createMeshServer());
+ app.use('/octopus', (req,res,next)=>{ if(req.path==='/' && !req.originalUrl.split('?')[0].endsWith('/')) return res.redirect(308,req.originalUrl.split('?')[0]+'/' ); mesh.then(m=>m.handler(req,res)).catch(next); });
  app.use(express.static(path.join(__dirname,'public')));
  const rooms=new Map();
  function reset(r) {
@@ -38,3 +40,4 @@ function createApp() {
 }
 if(require.main===module){const {http}=createApp();http.listen(process.env.PORT||3000,'0.0.0.0',()=>console.log('ShatterOS listening on port '+(process.env.PORT||3000)));}
 module.exports={createApp};
+
