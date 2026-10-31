@@ -2,7 +2,7 @@ const $=id=>document.getElementById(id);
 const state={id:null,token:null,room:null,nodes:[],seq:0,offline:false,queue:[],bytes:0,pending:new Map(),traces:[],pulses:[]};
 const log=t=>{const d=document.createElement('div');d.textContent=new Date().toLocaleTimeString()+'  '+t;$('log').prepend(d);while($('log').children.length>30)$('log').lastChild.remove();};
 const safeStorage={get(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
-async function api(data){const r=await fetch('/api',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({room:state.room,id:state.id,token:state.token,...data})});if(!r.ok){const e=new Error('HTTP '+r.status);e.status=r.status;throw e}return r.json()}
+async function api(data){const r=await fetch('./api',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({room:state.room,id:state.id,token:state.token,...data})});if(!r.ok){const e=new Error('HTTP '+r.status);e.status=r.status;throw e}return r.json()}
 function persist(){safeStorage.set('octopus:'+state.room,{queue:state.queue,traces:state.traces});$('queued').textContent=state.queue.length;renderMemory()}
 function renderMemory(){$('memory').replaceChildren(...state.traces.slice(-12).reverse().map(t=>{const d=document.createElement('div');d.textContent=t;return d}))}
 function trace(text,share=true){state.traces.push(text.slice(0,240));state.traces=state.traces.slice(-50);persist();if(share)send({kind:'memory',data:text.slice(0,240)})}
