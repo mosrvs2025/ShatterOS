@@ -1,6 +1,6 @@
 # Octopus Mesh — relay experiment
 
-An independent, opt-in experiment alongside ShatterOS. Each browser is a node with a local specialty; a small Node server relays bounded messages. Open it on phones or computers on a trusted LAN. It does not change the ShatterOS world or GhostNode.
+An independent, opt-in experiment alongside ShatterOS. Each browser is a node with a local specialty; a small Node server relays bounded messages. Open it on phones or computers on a trusted LAN. The ShatterOS server also hosts it at `/octopus/`; the experimental GhostNode branch can join as a Needle node over HTTPS.
 
 ## Run
 
@@ -15,16 +15,22 @@ Open `http://localhost:8787` on the computer. On the same Wi-Fi, open `http://CO
 
 Run transport integration tests with `node --test test/*.test.mjs`.
 
+## GhostNode integration (experimental)
+
+The private GhostNode branch `develop/octopus-mesh` adds a Devices screen that connects to a user-supplied HTTPS relay URL, for example `https://YOUR-TRUSTED-HOST/octopus`. Use a certificate trusted by Android and restrict the relay to a trusted network. HTTP and self-signed certificates untrusted by Android will not connect. The relay does not provide user authentication, peer identity verification, or end-to-end encryption; the relay operator and anyone joining the room can read its messages. Use non-sensitive demo text only. A TLS reverse proxy and network access controls must be configured separately.
+
+Install the debug APK produced by that branch’s successful Android Actions run, then install the verified model in GhostNode. Join the same room from the phone and browser. Submit a task from the browser, approve the incoming request on the phone, inspect the raw Needle tool-proposal output, and explicitly send the result. Remote tools are never executed. The requester sees the first 1,200 characters. GhostNode must remain on the Devices screen; a lost connection requires rejoining and pending requests may be lost. Android device execution remains unverified.
+
 ## What is real
 
 - A server relays actual messages among up to 16 browser nodes per room, including Android browsers. Each node computes its own text transform and can perform its local reflex while disconnected.
 - Shared memory consists of small text traces broadcast through the relay and stored in browser localStorage. A disconnected sender keeps an outgoing queue locally and retries on reconnect. Event history is bounded and ephemeral. It is not a CRDT or guaranteed durable delivery. Reloading can invalidate directed tasks and responses, and messages sent while a recipient is absent are not replayed to its new identity.
 - Topology and message animations correspond to live polling and received events. The displayed task time is measured on the requester and includes polling and processing; event bytes count serialized relay events, not full HTTP traffic. Browser CPU/battery power is not measured.
-- This is deterministic text processing, not an LLM, autonomous learning, or native GhostNode inference. The three specialties illustrate local execution; tasks fan out rather than adaptively route. No Android APK is supplied.
+- Browser specialties perform deterministic text processing; the GhostNode experimental branch can run a reviewed request through its existing local Needle engine. Tasks fan out rather than adaptively route. Hardware inference and the Android integration have not been verified.
 
 ## Security and scope
 
-**Trusted LAN and non-sensitive demo text only.** HTTP is unencrypted; anyone with network access and a room code can join. The server issues temporary bearer credentials to separate node operations, but does not authenticate users or encrypt data. Codes are not a security boundary. Do not expose this relay to the public internet. In-memory rooms disappear on restart. The relay is a single point of failure; nodes can execute local reflexes offline, but cannot communicate until it returns. There is no real direct peer transport, peer discovery, pairing, end-to-end encryption, consent policy, remote device control or access to GhostNode. Local storage is shared with other pages on the same origin.
+**Trusted LAN and non-sensitive demo text only.** HTTP is unencrypted; anyone with network access and a room code can join. The server issues temporary bearer credentials to separate node operations, but does not authenticate users or encrypt data. Codes are not a security boundary. Do not expose this relay to the public internet. In-memory rooms disappear on restart. The relay is a single point of failure; nodes can execute local reflexes offline, but cannot communicate until it returns. There is no real direct peer transport, peer discovery, verified peer pairing, end-to-end encryption, remote device control or automatic tool execution. GhostNode requires manual approval for inference and a separate approval to send the output. Local storage is shared with other pages on the same origin.
 
 ## Biological inspiration and engineering choices
 
