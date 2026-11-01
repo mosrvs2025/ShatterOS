@@ -26,7 +26,7 @@ Install the debug APK produced by that branch’s successful Android Actions run
 - A server relays actual messages among up to 16 browser nodes per room, including Android browsers. Each node computes its own text transform and can perform its local reflex while disconnected.
 - Shared memory consists of small text traces broadcast through the relay and stored in browser localStorage. A disconnected sender keeps an outgoing queue locally and retries on reconnect. Event history is bounded and ephemeral. It is not a CRDT or guaranteed durable delivery. Reloading can invalidate directed tasks and responses, and messages sent while a recipient is absent are not replayed to its new identity.
 - Topology and message animations correspond to live polling and received events. The displayed task time is measured on the requester and includes polling and processing; event bytes count serialized relay events, not full HTTP traffic. Browser CPU/battery power is not measured.
-- Browser specialties perform deterministic text processing; the GhostNode experimental branch can run a reviewed request through its existing local Needle engine. Tasks fan out rather than adaptively route. Hardware inference and the Android integration have not been verified.
+- Browser specialties perform deterministic text processing; the GhostNode experimental branch can run a reviewed request through its existing local Needle engine. Tasks can fan out or use an experimental single-node selector based on keyword-to-specialty matching and an exponentially smoothed observed response time. The measured response time includes human approval for GhostNode; it is not pure device or network latency. The selector has no timeout-based retry or learned task-success model. Hardware inference and the Android integration have not been verified.
 
 ## Security and scope
 
@@ -48,4 +48,4 @@ Run `node octopus-mesh/benchmark/compare.mjs` from the repository root for a det
 
 1. Design explicit peer approval, device identities, encrypted authenticated transport, revocation and replay protection before exposing GhostNode capabilities. GhostNode's existing protocol proposal requires these controls and visible tool approval.
 2. Add a real peer data path with relay-assisted discovery and test partitions and reconnection across physical devices. Specify conflict resolution and idempotent delivery before claiming shared durable memory.
-3. Replace fan-out with measurable capability/availability/energy-aware routing. Compare this with centralized and peer-only implementations using the same workload; measure power on hardware.
+3. Extend the simple keyword/latency selector into measurable capability/availability/energy-aware routing with retry and success feedback. Compare this with centralized and peer-only implementations using the same workload; measure power on hardware.
