@@ -42,7 +42,7 @@ Octopus arm nerve cords contain repeated ganglia that process sensory input and 
 
 ## Benchmark status
 
-The live round trip is an exploratory measurement of this relay-based prototype only. Centralized, decentralized and hybrid comparisons have **not** been benchmarked; neither power nor real-device reliability has been measured. A valid comparison needs identical workloads, device/browser versions, network conditions, repetitions and failure schedules; collect end-to-end p50/p95, completion rate, actual network bytes and externally measured device energy. Do not compare this demo's relay latency to hypothetical peer-to-peer values.
+Run `node octopus-mesh/benchmark/compare.mjs` from the repository root for a deterministic discrete-event simulation. It uses an identical seeded workload for all three hypothetical designs: 55% locally solvable tasks, independent hub/peer/link failures of 12%/8%/4%, and fixed modeled latencies and payload sizes. Hybrid falls back to the hub if a peer is unavailable. Successful simulated payload bytes exclude failed-attempt overhead. The results describe only these assumptions; this repository does not implement all three real network architectures.\n\nThe live round trip is an exploratory measurement of this relay-based prototype only. Centralized, decentralized and hybrid comparisons have **not** been benchmarked; neither power nor real-device reliability has been measured. A valid comparison needs identical workloads, device/browser versions, network conditions, repetitions and failure schedules; collect end-to-end p50/p95, completion rate, actual network bytes and externally measured device energy. Do not compare this demo's relay latency to hypothetical peer-to-peer values.
 
 ## Next integration steps
 
