@@ -1,0 +1,2 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {simulate} from '../benchmark/compare.mjs';
+test('comparison is reproducible and reports failures and unavailable power honestly',()=>{const a=simulate({seed:42,count:1000});assert.deepEqual(a,simulate({seed:42,count:1000}));for(const x of Object.values(a)){assert.equal(x.tasks,1000);assert.ok(x.success_rate>0&&x.success_rate<1);assert.ok(x.p95_ms>=x.p50_ms);assert.equal(x.power,'not measured')}});
